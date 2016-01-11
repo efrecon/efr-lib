@@ -303,7 +303,8 @@ proc ::binmake::kit { topdir app args } {
 	    set src [::argutil::resolve_links [file join .. lib $m]]
 	    if { $src ne "" } {
 		foreach fname [glob -- $src] {
-		    file copy -force $fname ${app}.vfs/lib
+		    file copy -force $fname \
+			[file join ${app}.vfs lib [file dirname $m]]
 		}
 		puts ""
 	    } else {
