@@ -442,7 +442,7 @@ proc ::init::modules { } {
 }
 
 
-proc ::init::slocate { f } {
+proc ::init::slocate { f { progname "" } } {
     variable INIT
     variable libdir
     global argv0
@@ -471,7 +471,9 @@ proc ::init::slocate { f } {
     # Now try all possible relative source location directories in
     # order, stop as soon as we've found the file and could source
     # it properly.
-    set progname [file rootname [file tail $argv0]]
+    if { $progname eq "" } {
+	set progname [file rootname [file tail $argv0]]
+    }
     foreach d $INIT(src_locs) {
 	set rd [string map [list %progname% $progname] [file join $libdir $d]]
 	if { [file isdirectory $rd] } {
