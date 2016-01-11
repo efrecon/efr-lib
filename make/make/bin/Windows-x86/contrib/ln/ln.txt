@@ -1,0 +1,54 @@
+Inv Softworks LLC   www.flexhex.com
+Copyright (c) 2005. All rights reserved.
+
+This utility creates symbolic and hard links and can be called from a batch
+file or from a command line. In order to install the program just unpack
+it to any directory. To avoid specifying the full path every time,
+unpack the program to a directory that is listed in the PATH environment
+variable; the Windows directory is an example of an appropriate place.
+
+This command line utility supplements the article "NTFS Hard Links, Junctions,
+and Windows Shortcuts", which can be found at
+http://www.flexhex.com/docs/articles/hard-links.phtml
+
+
+Usage:
+  ln filepath linkpath                (create hard link)
+  ln dirpath linkpath                 (create directory junction)
+  ln -s path linkpath [description]   (create shortcut)
+  
+  
+Examples:
+
+  ln c:\all_photos\dsn0842.jpg c:\fav_photos\sunset.jpg
+
+Creates a hard link because the first argument is a file. Please note that
+a hard link cannot point to a different drive.
+
+
+  ln \all_photos e:\fav_photos
+  
+The first argument is a directory, so the command creates a directory
+junction (that is, a soft link to the directory '\all_photos').
+
+
+  ln -s c:\all_photos\dsn0842.jpg c:\fav_photos\sunset.jpg "My best sunset photo"
+  
+This command creates a Windows shortcut. Please note that the optional
+description argument contains spaces so it should be enclosed in quotes.
+
+You can create shortcuts to any file system objects - drives, directories,
+or files.
+
+
+Legalities:
+
+You can use this program without charge for any commercial or non-commercial
+purpose. You can distribute this program freely provided that you are
+distributing the original zip archive including this README file.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED
+"AS IS" AND INV SOFTWORKS LLC DISCLAIMS ALL OTHER WARRANTIES AND CONDITIONS,
+EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, CONFORMANCE WITH
+DESCRIPTION, TITLE AND NON-INFRINGEMENT OF THIRD PARTY RIGHTS.
