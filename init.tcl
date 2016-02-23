@@ -693,7 +693,7 @@ proc ::init::init { args } {
 	    -depends {
 		set ARGS(-depends) $INIT(-depends)
 		if { ! [info exists ::starkit::topdir] } {
-		    lappend ARGS(-depends) lib
+		    ::argutil::accesslib lib
 		}
 	    }
 	    default {
