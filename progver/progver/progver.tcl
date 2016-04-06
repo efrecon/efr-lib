@@ -13,6 +13,15 @@ namespace eval ::progver {
 }
 
 
+proc ::progver::pretty { version } {
+    set vl [split $version "."]
+    while {[lindex $vl end] eq "0" } {
+	set vl [lrange $vl 0 end-1]
+    }
+    return [join $vl "."]
+}
+
+
 proc ::progver::__pad { version } {
     variable VERSION
 
