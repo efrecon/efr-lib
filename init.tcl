@@ -568,6 +568,48 @@ proc ::init::sources { } {
 }
 
 
+# ::init::Require -- Require package
+#
+#       Thin wrapper around package require. This implementation is able to keep
+#       the interpreter running when package loading was not a success, if
+#       instructed so.
+#
+# Arguments:
+#	pkg	Name of package
+#	v	Version to specify, empty for latest available.
+#	lazy	Turn this on to accept not being able to load a package.
+#
+# Results:
+#       Version number of package loaded, empty string on errors (package not
+#       present)
+#
+# Side Effects:
+#       Return an error and ends program execution when package is not present
+#       and lazy was turned off.
+proc ::init::Require { pkg {v ""} {lazy 0} } {
+    # Construct packge require command, taking the specified version number into
+    # account.
+    set cmd [list package require $pkg]
+    if { $v ne "" } {
+	lappend cmd $v
+    }
+    
+    # Accept (or not) when package cannot be loaded.
+    if { [string is true $lazy] } {
+	if { [catch {eval $cmd} ver] == 0 } {
+	    return $ver
+	} else {
+	    log warn "Could not load package $pkg: $ver"
+	}
+    } else {
+	set ver [eval $cmd]
+	return $ver
+    }
+
+    return ""
+}
+
+
 # ::init::packages -- Initialise packages
 #
 #       Initialises regular Tcl/Tk packages that this application
@@ -597,12 +639,21 @@ proc ::init::packages { } {
     log info "Requiring packages $ARGS(-packages)..."
     set reqs {}
     foreach pkg $ARGS(-packages) {
+	set lazy 0
+	set v ""
 	if { [llength $pkg] > 1 } {
 	    foreach {pkg v} $pkg break
-	    set ver [package require $pkg $v]
+	    if { [string index $pkg 0] eq "?" } {
+		set pkg [string trim [string range $pkg 1 end]]
+		set lazy 1
+	    }
 	} else {
-	    set ver [package require $pkg]
+	    if { [string index $pkg 0] eq "?" } {
+		set pkg [string trim [string range $pkg 1 end]]
+		set lazy 1
+	    }
 	}
+	set ver [Require $pkg $v $lazy]
 	lappend reqs $pkg $ver
 	log debug "Loaded package $pkg at version $ver"
 	if { $ARGS(-splash) ne "" } {
@@ -817,6 +868,7 @@ proc ::init::init { args } {
     # arguments to this call.  This is dangerous, so they should
     # really know what they do...
     if { $ARGS(-parsed) ne "" } {
+	log debug "Early modification of the arguments"
 	if { [catch {eval $ARGS(-parsed) $ARGS(-store) $argstore} err] } {
 	    log error "Could not execute parsed callback: $err"
 	}
