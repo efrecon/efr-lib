@@ -165,9 +165,9 @@ proc ::notifier::__initpos { top } {
 		    set NF(endx) $NF(startx)
 		    set NF(endy) $NF(-offsety)
 		} else {
-		    set NF(startx) [expr $sw + $NF(-offsetx)]
+		    set NF(startx) [expr $sw - $NF(-offsetx)]
 		    set NF(starty) [expr $NF(-offsety)]
-		    set NF(endx) [expr $sw - $w + $NF(-offsetx)]
+		    set NF(endx) [expr $sw - $w - $NF(-offsetx)]
 		    set NF(endy) $NF(starty)
 		}
 	    }
@@ -394,7 +394,7 @@ proc ::notifier::__hide { top { atonce off } } {
 	    # the hiding animation.
 	    ${log}::info "Hiding notifier $top with animation"
 	    set NF(state) "SHOWN"
-	    set NF(startanim) [clock clicks -milliseconds]
+	    set NF(startanim) 0
 	    ::notifier::__animate $top "HIDDEN"
 	}
     } else {
