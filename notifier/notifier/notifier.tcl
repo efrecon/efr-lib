@@ -458,13 +458,13 @@ proc ::notifier::__state { top } {
 }
 
 
-proc ::notifier::__delete { top } {
+proc ::notifier::__delete { w } {
     variable NOTIF
     variable log
 
-    set idx [lsearch $NOTIF(notifiers) $top]
+    set idx [lsearch $NOTIF(notifiers) $w]
     if { $idx >= 0 } {
-	set varname ::notifier::notifier_${top}
+	set varname ::notifier::notifier_$w
 	upvar \#0 $varname NF
 
 	if { $NF(timer) != "" } {
@@ -538,7 +538,7 @@ proc ::notifier::new { args } {
 		default {eval @w@ $cmd $args}
 	    }
 	}]
-	bind $top <Destroy> +[list ::notifier::__delete $top]
+	bind $top <Destroy> +[list [namespace current]::__delete %W]
 	${log}::debug "Created new notifier $top"
     }
     eval __config $top $args
