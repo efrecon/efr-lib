@@ -31,7 +31,7 @@ namespace eval ::bootstrap {
     if { ! [info exists BS] } {
         array set BS {
             levels     "debug info notice warn error critical"
-            loglevel   debug
+            loglevel   warn
             dateformat "%d%m%y %H:%M:%S"
             dft_outfd  stdout
             autostart  on
