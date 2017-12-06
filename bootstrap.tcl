@@ -236,12 +236,12 @@ proc ::bootstrap::__readlnk { lnk } {
         return -code error "'$lnk' is not an accessible file"
     }
     
-	if { [catch {package require twapi} err] == 0 } {
-		log debug "'twapi' available, trying most modern method first"
-		array set shortcut [::twapi::read_shortcut $lnk]
-		log info "'$lnk' points to '$shortcut(-path)'"
-		return $shortcut(-path)
-	} elseif { [catch {package require tcom} err] == 0 } {
+    if { [catch {package require twapi} err] == 0 } {
+        log debug "'twapi' available, trying most modern method first"
+        array set shortcut [::twapi::read_shortcut $lnk]
+        log info "'$lnk' points to '$shortcut(-path)'"
+        return $shortcut(-path)
+    } elseif { [catch {package require tcom} err] == 0 } {
         log debug "'tcom' available trying failsafe method first"
         set sh [::tcom::ref createobject "WScript.Shell"]
         set lobj [$sh CreateShortcut [file nativename $lnk]]
