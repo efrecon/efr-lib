@@ -29,17 +29,17 @@ package provide bootstrap 1.0
 namespace eval ::bootstrap {
     variable BS
     if { ! [info exists BS] } {
-	array set BS {
-	    levels     "debug info notice warn error critical"
-	    loglevel   warn
-	    dateformat "%d%m%y %H:%M:%S"
-	    dft_outfd  stdout
-	    autostart  on
-	    initdone   off
-	    agu_path   ""
-	    vbs_path   ""
-	    -maxlinks  10
-	}
+        array set BS {
+            levels     "debug info notice warn error critical"
+            loglevel   debug
+            dateformat "%d%m%y %H:%M:%S"
+            dft_outfd  stdout
+            autostart  on
+            initdone   off
+            agu_path   ""
+            vbs_path   ""
+            -maxlinks  10
+        }
     }
     namespace export bootstrap
 }
@@ -68,40 +68,40 @@ namespace eval ::bootstrap {
 #	Dump to the file descriptor
 proc ::bootstrap::__out { service level str { dt "" } { fd_nm "" } } {
     variable BS
-
+    
     # Store current date in right format
     if { $dt eq "" } {
-	set dt [clock seconds]
+        set dt [clock seconds]
     }
     set logdt [clock format $dt -format $BS(dateformat)]
-
+    
     # Now guess if fd_nm is a file descriptor or the name of a
     # file. If it is a file name, try to open it.
     if { $fd_nm eq "" } {
-	set fd_nm $BS(dft_outfd)
-    } 
-    if { [catch {fconfigure $fd_nm}] } {
-	# fconfigure will scream if the variable is not a file
-	# descriptor, in that case, it is a file name!
-	if { [catch {open $fd_nm a+} fd] } {
-	    __out bootstrap warn "Cannot open $fd_nm for writing: $fd"
-	    set fd ""
-	}
-    } else {
-	set fd $fd_nm
+        set fd_nm $BS(dft_outfd)
     }
-
+    if { [catch {fconfigure $fd_nm}] } {
+        # fconfigure will scream if the variable is not a file
+        # descriptor, in that case, it is a file name!
+        if { [catch {open $fd_nm a+} fd] } {
+            __out bootstrap warn "Cannot open $fd_nm for writing: $fd"
+            set fd ""
+        }
+    } else {
+        set fd $fd_nm
+    }
+    
     # Now that we are here, fd contains where to output the string.
     # It can be empty if we could not open the file when the input was
     # a file name.
     if { $fd ne "" } {
-	if { [catch {puts $fd "\[$logdt\] \[$service\] \[$level\] '$str'"}] } {
-	    __out bootstrap warn "Cannot write to log file descriptor $fd!"
-	}
-	if { $fd ne $fd_nm } {
-	    # Close the output file if the parameter was a name.
-	    close $fd
-	}
+        if { [catch {puts $fd "\[$logdt\] \[$service\] \[$level\] '$str'"}] } {
+            __out bootstrap warn "Cannot write to log file descriptor $fd!"
+        }
+        if { $fd ne $fd_nm } {
+            # Close the output file if the parameter was a name.
+            close $fd
+        }
     }
 }
 
@@ -125,11 +125,11 @@ proc ::bootstrap::__out { service level str { dt "" } { fd_nm "" } } {
 #	Will possibly create a new logger service.
 proc ::bootstrap::log { lvl str } {
     variable BS
-
+    
     set au_lvl [lsearch $BS(levels) $BS(loglevel)]
     set cur_lvl [lsearch $BS(levels) $lvl]
     if { $cur_lvl >= $au_lvl } {
-	__out bootstrap debug $str
+        __out bootstrap debug $str
     }
 }
 
@@ -153,64 +153,64 @@ proc ::bootstrap::log { lvl str } {
 proc ::bootstrap::__readlnk_vbs { lnk } {
     variable BS
     global env
-
+    
     # First try among some well-known environment variables for a
     # temporary directory
     set tmpdir ""
     if { [array names env "TEMP"] == "TEMP" } {
-	set tmpdir $env(TEMP)
+        set tmpdir $env(TEMP)
     } elseif { [array names env "TMP"] == "TMP" } {
-	set tmpdir $env(TMP)
+        set tmpdir $env(TMP)
     } elseif { [array names env "TMPDIR"] == "TMPDIR" } {
-	set tmpdir $env(TMPDIR)
+        set tmpdir $env(TMPDIR)
     } elseif { [array names env "USERPROFILE"] == "USERPROFILE" } {
-	set tmpdir [file join $env(USERPROFILE) "Local Settings" "Temp"]
+        set tmpdir [file join $env(USERPROFILE) "Local Settings" "Temp"]
     } elseif { [array names env "WINDIR"] == "WINDIR" } {
-	set tmpdir [file join $env(WINDIR) "Temp"]
+        set tmpdir [file join $env(WINDIR) "Temp"]
     } elseif { [array names env "SYSTEMROOT"] == "SYSTEMROOT" } {
-	set tmpdir [file join $env(SYSTEMROOT) "Temp"]
+        set tmpdir [file join $env(SYSTEMROOT) "Temp"]
     } else {
-	set tmpdir [cwd]
+        set tmpdir [cwd]
     }
-
+    
     set tgt ""; # Link target
     set fname [file join $tmpdir bootstrap_[pid].vbs]
     if { [catch {open $fname [list WRONLY CREAT]} fd] == 0 } {
-	# We (re)create the VBS for conversion, this is a bit
-	# overkill, but only 5 lines, so it should do and simplifies
-	# the code.
-	fconfigure $fd -translation crlf
-	puts $fd "Dim WSHShell"
-	puts $fd "Set WSHShell = WScript.CreateObject(\"WScript.Shell\")"
-	puts $fd "Set WshSysEnv = WshShell.Environment(\"PROCESS\")"
-	puts $fd "Set myShortcut = WSHShell.CreateShortcut(Wscript.Arguments.Item(0))"
-	puts $fd "WScript.Echo myShortcut.TargetPath"
-	close $fd
-	set BS(vbs_path) $fname;  # Remember it to be able to cleanup later
-	
-	# Run the VBS script and gather result.
-	set cmd "|cscript //nologo \"$fname\" \"$lnk\""
-	set fl [open $cmd]
-	set tgt [read $fl]
-	if { [catch {close $fl} err] } {
-	    log error "Could not read content of link: $lnk"
-	}
-	set tgt [string trim $tgt]
+        # We (re)create the VBS for conversion, this is a bit
+        # overkill, but only 5 lines, so it should do and simplifies
+        # the code.
+        fconfigure $fd -translation crlf
+        puts $fd "Dim WSHShell"
+        puts $fd "Set WSHShell = WScript.CreateObject(\"WScript.Shell\")"
+        puts $fd "Set WshSysEnv = WshShell.Environment(\"PROCESS\")"
+        puts $fd "Set myShortcut = WSHShell.CreateShortcut(Wscript.Arguments.Item(0))"
+        puts $fd "WScript.Echo myShortcut.TargetPath"
+        close $fd
+        set BS(vbs_path) $fname;  # Remember it to be able to cleanup later
+        
+        # Run the VBS script and gather result.
+        set cmd "|cscript //nologo \"$fname\" \"$lnk\""
+        set fl [open $cmd]
+        set tgt [read $fl]
+        if { [catch {close $fl} err] } {
+            log error "Could not read content of link: $lnk"
+        }
+        set tgt [string trim $tgt]
     }
-
+    
     if { $tgt eq "" } {
-	log warn "Failed with VBS for conversion, trying introspection"
-	set fp [open $lnk]
-	fconfigure $fp -encoding binary -translation binary -eofchar {}
-	foreach snip [split [read $fp] \x00] {
-	    set abssnip [file join [file dirname $lnk] $snip]
-	    if { $snip ne "" && [file exists $abssnip]} {
-		log info "'$abssnip' found in '$lnk', using it as the link!"
-		set tgt $snip
-		break
-	    }
-	}
-	close $fp
+        log warn "Failed with VBS for conversion, trying introspection"
+        set fp [open $lnk]
+        fconfigure $fp -encoding binary -translation binary -eofchar {}
+        foreach snip [split [read $fp] \x00] {
+            set abssnip [file join [file dirname $lnk] $snip]
+            if { $snip ne "" && [file exists $abssnip]} {
+                log info "'$abssnip' found in '$lnk', using it as the link!"
+                set tgt $snip
+                break
+            }
+        }
+        close $fp
     }
     
     return $tgt
@@ -232,24 +232,29 @@ proc ::bootstrap::__readlnk_vbs { lnk } {
 #	Will attempt to load tcom.
 proc ::bootstrap::__readlnk { lnk } {
     if { ![file exists $lnk] } {
-	log warn "'$lnk' is not an accessible file"
-	return -code error "'$lnk' is not an accessible file"
-    } 
-
-    if { [catch {package require tcom} err] == 0 } {
-	log debug "'tcom' available trying failsafe method first"
-	set sh [::tcom::ref createobject "WScript.Shell"]
-	set lobj [$sh CreateShortcut [file nativename $lnk]]
-	set tgt [$lobj TargetPath]
-	log info "'$lnk' points to '$tgt'"
-	if { $tgt ne "" } {
-	    return $tgt
-	}
-    } else {
-	log debug "Could not find 'tcom' package: $err"
-	return [__readlnk_vbs $lnk]
+        log warn "'$lnk' is not an accessible file"
+        return -code error "'$lnk' is not an accessible file"
     }
-
+    
+	if { [catch {package require twapi} err] == 0 } {
+		log debug "'twapi' available, trying most modern method first"
+		array set shortcut [::twapi::read_shortcut $lnk]
+		log info "'$lnk' points to '$shortcut(-path)'"
+		return $shortcut(-path)
+	} elseif { [catch {package require tcom} err] == 0 } {
+        log debug "'tcom' available trying failsafe method first"
+        set sh [::tcom::ref createobject "WScript.Shell"]
+        set lobj [$sh CreateShortcut [file nativename $lnk]]
+        set tgt [$lobj TargetPath]
+        log info "'$lnk' points to '$tgt'"
+        if { $tgt ne "" } {
+            return $tgt
+        }
+    } else {
+        log debug "Could not find 'twapi' or 'tcom' package: $err"
+        return [__readlnk_vbs $lnk]
+    }
+    
     return ""
 }
 
@@ -271,32 +276,32 @@ proc ::bootstrap::__readlnk { lnk } {
 proc ::bootstrap::resolve_links { path } {
     global tcl_platform
     variable BS
-
+    
     if { $tcl_platform(platform) eq "windows" } {
-	for { set i 0 } { $i < $BS(-maxlinks) } { incr i } {
-	    set rp ""
-	    set sp [file split $path]
-	    foreach d $sp {
-		set jp [file join $rp $d]
-		if { [string toupper [file extension $jp]] eq ".LNK" } {
-		    log debug "Resolving sub path at $jp"
-		    set rp [file join $rp [__readlnk $jp]]
-		} elseif { [file exists ${jp}.lnk] } {
-		    log debug "Resolving sub path at ${jp}.lnk"
-		    set rp [file join $rp [__readlnk ${jp}.lnk]]
-		} else {
-		    set rp $jp
-		}
-	    }
-	    if { $rp eq $path } {
-		break
-	    }
-	    set path $rp
-	}
-	log info "Resolved '$path' to '$rp'"
-	return $rp
+        for { set i 0 } { $i < $BS(-maxlinks) } { incr i } {
+            set rp ""
+            set sp [file split $path]
+            foreach d $sp {
+                set jp [file join $rp $d]
+                if { [string toupper [file extension $jp]] eq ".LNK" } {
+                    log debug "Resolving sub path at $jp"
+                    set rp [file join $rp [__readlnk $jp]]
+                } elseif { [file exists ${jp}.lnk] } {
+                    log debug "Resolving sub path at ${jp}.lnk"
+                    set rp [file join $rp [__readlnk ${jp}.lnk]]
+                } else {
+                    set rp $jp
+                }
+            }
+            if { $rp eq $path } {
+                break
+            }
+            set path $rp
+        }
+        log info "Resolved '$path' to '$rp'"
+        return $rp
     } else {
-	return $path
+        return $path
     }
 }
 
@@ -316,53 +321,53 @@ proc ::bootstrap::resolve_links { path } {
 #	Source bootstrap.tcl
 proc ::bootstrap::bootstrap { } {
     variable BS
-
+    
     if { ! [string is true $BS(initdone)] } {
-	global argv0
-
-	# Build a list of library path from within which we should look
-	# for the sub directory of the TIL.
-	set rootdirs [list [file dirname [info script]] [file dirname $argv0]]
-	set path_search {}
-	foreach rd $rootdirs {
-	    foreach d [list [file join .. .. .. lib til bin] \
-			   [file join .. .. lib til bin ] \
-			   [file join .. lib til bin ] \
-			   [file join lib til bin ] \
-			   [file join .. .. .. til bin] \
-			   [file join .. .. til bin] \
-			   [file join .. til bin]] {
-		lappend path_search [file join $rd $d]
-	    }
-	}
-	log debug "Looking for argutil in '$path_search'"
-	
-	# Test one directory after the other from the previous list
-	# after the bootstrap file that we will source to bootstrap the
-	# library.
-	foreach p $path_search {
-	    set agu [file join [resolve_links $p] argutil.tcl]
-	    if { [file exists $agu] } {
-		if { [catch {source "$agu"} err] } {
-		    log error \
-			"Found argutil in $agu, but could not source: $err!"
-		} else {
-		    log notice "Found argutil at '$agu'"
-		    set BS(initdone) on
-		    set BS(agu_path) $agu
-		    break
-		}
-	    }
-	}
+        global argv0
+        
+        # Build a list of library path from within which we should look
+        # for the sub directory of the TIL.
+        set rootdirs [list [file dirname [info script]] [file dirname $argv0]]
+        set path_search {}
+        foreach rd $rootdirs {
+            foreach d [list [file join .. .. .. lib til bin] \
+                    [file join .. .. lib til bin ] \
+                    [file join .. lib til bin ] \
+                    [file join lib til bin ] \
+                    [file join .. .. .. til bin] \
+                    [file join .. .. til bin] \
+                    [file join .. til bin]] {
+                lappend path_search [file join $rd $d]
+            }
+        }
+        log debug "Looking for argutil in '$path_search'"
+        
+        # Test one directory after the other from the previous list
+        # after the bootstrap file that we will source to bootstrap the
+        # library.
+        foreach p $path_search {
+            set agu [file join [resolve_links $p] argutil.tcl]
+            if { [file exists $agu] } {
+                if { [catch {source "$agu"} err] } {
+                    log error \
+                            "Found argutil in $agu, but could not source: $err!"
+                } else {
+                    log notice "Found argutil at '$agu'"
+                    set BS(initdone) on
+                    set BS(agu_path) $agu
+                    break
+                }
+            }
+        }
     }
-
+    
     # Clean VBS temp file, if necessary
     if { $BS(vbs_path) ne "" && [file exists $BS(vbs_path)] } {
-	file delete -force -- $BS(vbs_path)
-	log info "Cleaned away temporary VBS for link target conversion"
-	set BS(vbs_path) ""
+        file delete -force -- $BS(vbs_path)
+        log info "Cleaned away temporary VBS for link target conversion"
+        set BS(vbs_path) ""
     }
-	
+    
     return $BS(agu_path)
 }
 
@@ -371,3 +376,4 @@ proc ::bootstrap::bootstrap { } {
 if { $::bootstrap::BS(autostart) } {
     ::bootstrap::bootstrap
 }
+
