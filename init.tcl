@@ -46,7 +46,6 @@ namespace eval ::init {
             { verbose.alpha "warn" "Verbosity level" }
             { config.arg "%progdir%/%progname%.factory.cfg %progdir%/%progname%.%platform%.factory.cfg %progdir%/%progname%.local.cfg %progdir%/%progname%.%platform%.local.cfg %progdir%/%progname%.cfg %progdir%/%progname%.%platform%.cfg" "Configuration files" }
             { arguments.arg "%progdir%/%progname%.factory.arg %progdir%/%progname%.%platform%.factory.arg %progdir%/%progname%.local.arg %progdir%/%progname%.%platform%.local.arg %progdir%/%progname%.arg %progdir%/%progname%.%platform%.arg" "Configuration files for overriding command line arguments" }
-            { dbgport.integer "-1" "Port number for debugging sessions" }
             { language.arg "" "Language to use in app, empty for OS language" }
         }
         variable libdir [file dirname [file normalize [info script]]]
@@ -859,7 +858,7 @@ proc ::init::init { args } {
     # Fix package dependency depending on some of the options,
     # i.e. arrange to only require packages when the debug port is
     # set.
-    if { $GLBL(dbgport) > 0 } {
+    if { [info exists GLBL(dbgport)] && $GLBL(dbgport) > 0 } {
         lappend ARGS(-packages) tkconclient
         lappend ARGS(-depends) tkconclient
         if { $::tcl_platform(platform) eq "windows" } {
@@ -958,7 +957,7 @@ proc ::init::init { args } {
     }
     
     # Listen for debugging sessions
-    if { $GLBL(dbgport) > 0 } {
+    if { [info exists GLBL(dbgport)] && $GLBL(dbgport) > 0 } {
         if { [catch {::tkconclient::start $GLBL(dbgport)} err] } {
             log warn "Could not start remote debug facility: $err"
         }
@@ -1035,8 +1034,9 @@ proc ::init::debughelper {} {
     set idx [lsearch -glob -index 0 $forced_opts dbgport.*]
     if { $idx >= 0 } {
         set forced_opts [lreplace $forced_opts $idx $idx \
-                { dbgport.integer "3456" \
-                "Port number for debugging sessions" }]
+                { dbgport.integer "3456" "Port number for debugging sessions" }]
+    } else {
+        lappend forced_opts { dbgport.integer "3456" "Port number for debugging sessions" }
     }
     
     if { $tcl_platform(platform) eq "windows" } {
@@ -1081,4 +1081,3 @@ proc ::init::debughelper {} {
 
 
 package provide init 1.1
-
